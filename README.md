@@ -1,73 +1,62 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo_text.svg" width="320" alt="Nest Logo" /></a>
-</p>
+# Nest-Typed-Config Issue 149
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+Example project for https://github.com/Nikaple/nest-typed-config/issues/149.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://coveralls.io/github/nestjs/nest?branch=master" target="_blank"><img src="https://coveralls.io/repos/github/nestjs/nest/badge.svg?branch=master#9" alt="Coverage" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
-
-## Description
-
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
-
-## Installation
-
-```bash
+```console
+$ git clone git@github.com:imkh/nest-typed-config-issue-149.git
+$ cd nest-typed-config-issue-149
 $ npm install
+$ npm run start:dev # see image 4 for full error output
+
+Error: Configuration is not valid:
+  - config database.undefined does not match the following rules:
+    - unknownValue: an unknown value was passed to the validate function, current config is `undefined`
+
+...
 ```
 
-## Running the app
+`@ValidateNested()` decorator on nested config class doesn't work without custom valid function.
 
-```bash
-# development
-$ npm run start
+### 1. No decorator WITHOUT custom validate function
 
-# watch mode
-$ npm run start:dev
+❌ Config loads partially: the nested config is missing.
 
-# production mode
-$ npm run start:prod
+![](./images/1_no-decorator_no-validate.png)
+
+### 2. `@Allow()` decorator WITHOUT custom validate function
+
+❌ Config loads entirely but the nested config is not validated + the nested config can't be injected `AppService`:
+
+```
+Nest can't resolve dependencies of the AppService
+(RootConfig, ?). Please make sure that the argument
+DatabaseConfig at index [1] is available in the AppModule
+context.
 ```
 
-## Test
+![](./images/2_allow-decorator_no-validate.png)
 
-```bash
-# unit tests
-$ npm run test
+### 3. `@IsDefined()` decorator WITHOUT custom validate function
 
-# e2e tests
-$ npm run test:e2e
+❌ Config loads entirely but the nested config is not validated + the nested config can't be injected `AppService`:
 
-# test coverage
-$ npm run test:cov
+```
+Nest can't resolve dependencies of the AppService
+(RootConfig, ?). Please make sure that the argument
+DatabaseConfig at index [1] is available in the AppModule
+context.
 ```
 
-## Support
+![](./images/3_isdefined-decorator_no-validate.png)
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+### 4. `@ValidateNested()` decorator WITHOUT custom validate function
 
-## Stay in touch
+❌ Throw an error.
 
-- Author - [Kamil Myśliwiec](https://kamilmysliwiec.com)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+![](/images/4_validatenested-decorator_no-validate.png)
 
-## License
+### 5. `@ValidateNested()` decorator WITH custom validate function
 
-Nest is [MIT licensed](LICENSE).
+✅ Works, but needs the custom validate function.
+
+![](./images/5_validenested-decorator_custom-validate.png)

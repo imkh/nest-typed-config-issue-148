@@ -1,0 +1,3 @@
+myAppUrl: https://example.com
+database:
+  name: database_name
